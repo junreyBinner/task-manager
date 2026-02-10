@@ -1,6 +1,6 @@
 FROM php:8.3-fpm
 
-# Install dependencies
+# Install system dependencies (IMPORTANT: may libpq-dev na)
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -16,23 +16,23 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Set working directory
 WORKDIR /var/www/html
 
 # Copy project files
 COPY . .
 
-# Install PHP deps
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Install Node deps & build frontend assets
+# Install Node deps & build frontend
 RUN npm install && npm run build
 
-# Fix permissions
-RUN chmod -R 777 storage bootstrap/cache public
+# Set permissions
+RUN chmod -R 777 storage bootstrap/cache
 
+# Expose port
 EXPOSE 8000
 
-# Cache config & routes for performance
-RUN php artisan config:clear && php artisan config:cache && php artisan route:clear && php artisan view:clear
-
+# Start Laravel
 CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
