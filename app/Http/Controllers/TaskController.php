@@ -34,6 +34,12 @@ class TaskController extends Controller
         return view('tasks.index', compact('tasks'));
     }
 
+    // Show create form - ADD THIS METHOD!
+    public function create()
+    {
+        return view('tasks.create');
+    }
+
     // Store new task
     public function store(Request $request)
     {
