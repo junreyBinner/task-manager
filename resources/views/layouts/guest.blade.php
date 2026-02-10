@@ -13,7 +13,12 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
     <!-- Scripts -->
+    @if(app()->environment('production'))
+    <link rel="stylesheet" href="{{ asset('build/assets/app-DmxEGf91.css') }}">
+    <script type="module" src="{{ asset('build/assets/app-CBbTb_k3.js') }}"></script>
+    @else
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
 
     <style>
         :root {
@@ -142,77 +147,77 @@
                     </div>
                 </div> -->
 
-                <!-- Form Content -->
-                <div class="p-6 sm:p-8">
-                    {{ $slot }}
+                    <!-- Form Content -->
+                    <div class="p-6 sm:p-8">
+                        {{ $slot }}
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center space-x-3">
+                                <div class="flex items-center space-x-1 text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    <span>256-bit SSL</span>
+                                </div>
+                                <div class="h-4 w-px bg-gray-300"></div>
+                                <div class="flex items-center space-x-1 text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    <span>Fast</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                <span class="text-xs text-gray-500">Online</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Card Footer -->
-                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                    <div class="flex items-center justify-between text-sm">
-                        <div class="flex items-center space-x-3">
-                            <div class="flex items-center space-x-1 text-gray-600">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                </svg>
-                                <span>256-bit SSL</span>
-                            </div>
-                            <div class="h-4 w-px bg-gray-300"></div>
-                            <div class="flex items-center space-x-1 text-gray-600">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                <span>Fast</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-1">
-                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                            <span class="text-xs text-gray-500">Online</span>
-                        </div>
+                <!-- Quick Stats -->
+                <div class="mt-4 grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                        <div class="text-xs text-gray-500">Active Users</div>
+                        <div class="font-bold text-indigo-600">1.2K+</div>
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                        <div class="text-xs text-gray-500">Tasks Managed</div>
+                        <div class="font-bold text-indigo-600">45K+</div>
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                        <div class="text-xs text-gray-500">Uptime</div>
+                        <div class="font-bold text-green-600">99.9%</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Stats -->
-            <div class="mt-4 grid grid-cols-3 gap-3 text-center">
-                <div class="bg-white/80 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
-                    <div class="text-xs text-gray-500">Active Users</div>
-                    <div class="font-bold text-indigo-600">1.2K+</div>
-                </div>
-                <div class="bg-white/80 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
-                    <div class="text-xs text-gray-500">Tasks Managed</div>
-                    <div class="font-bold text-indigo-600">45K+</div>
-                </div>
-                <div class="bg-white/80 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
-                    <div class="text-xs text-gray-500">Uptime</div>
-                    <div class="font-bold text-green-600">99.9%</div>
+            <!-- Links & Footer -->
+            <div class="mt-8 text-center space-y-4 relative">
+                @if(request()->routeIs('login'))
+                <p class="text-sm text-gray-600">
+                    New to TaskFlow?
+                    <a href="{{ route('register') }}" class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline ml-1">
+                        Start Managing Tasks →
+                    </a>
+                </p>
+                @elseif(request()->routeIs('register'))
+                <p class="text-sm text-gray-600">
+                    Already have an account?
+                    <a href="{{ route('login') }}" class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline ml-1">
+                        Continue Managing Tasks →
+                    </a>
+                </p>
+                @endif
+
+                <div class="text-xs text-gray-500 pt-4 border-t border-gray-200">
+                    © {{ date('Y') }} TaskFlow Manager. Streamline your workflow.
                 </div>
             </div>
         </div>
-
-        <!-- Links & Footer -->
-        <div class="mt-8 text-center space-y-4 relative">
-            @if(request()->routeIs('login'))
-            <p class="text-sm text-gray-600">
-                New to TaskFlow?
-                <a href="{{ route('register') }}" class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline ml-1">
-                    Start Managing Tasks →
-                </a>
-            </p>
-            @elseif(request()->routeIs('register'))
-            <p class="text-sm text-gray-600">
-                Already have an account?
-                <a href="{{ route('login') }}" class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline ml-1">
-                    Continue Managing Tasks →
-                </a>
-            </p>
-            @endif
-
-            <div class="text-xs text-gray-500 pt-4 border-t border-gray-200">
-                © {{ date('Y') }} TaskFlow Manager. Streamline your workflow.
-            </div>
-        </div>
-    </div>
 </body>
 
 </html>
