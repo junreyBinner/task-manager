@@ -1,44 +1,37 @@
-FROM php:8.2-fpm
+FROM php:8.3-fpm
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    nginx \
-    supervisor \
     git \
-    unzip \
     curl \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
     zip \
+    unzip \
+    libzip-dev \
+    libonig-dev \
     nodejs \
     npm \
-    gettext-base \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring zip
 
-WORKDIR /var/www
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy app
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy project
 COPY . .
 
-# Install PHP deps
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# INSTALL & BUILD FRONTEND
+# Install Node dependencies & build assets
 RUN npm install && npm run build
 
-# Permissions
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# Set permissions
+RUN chmod -R 777 storage bootstrap/cache
 
-# Configs
-COPY docker/nginx.conf /etc/nginx/templates/default.conf.template
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-render.conf
+# Expose port
+EXPOSE 8000
 
-EXPOSE 8080
-
-CMD envsubst '$PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/sites-available/default \
- && nginx -t \
- && /usr/bin/supervisord -n
+# Start Laravel app
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
