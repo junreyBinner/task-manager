@@ -12,13 +12,10 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
+    
     <!-- Scripts -->
-    @if(app()->environment('production'))
-    <link rel="stylesheet" href="{{ asset('build/assets/app-DmxEGf91.css') }}">
-    <script type="module" src="{{ asset('build/assets/app-CBbTb_k3.js') }}"></script>
-    @else
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
+
 
     <style>
         :root {
