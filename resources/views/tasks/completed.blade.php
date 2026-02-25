@@ -23,6 +23,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Completed Date</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
@@ -32,6 +33,11 @@
                         @foreach($tasks as $task)
                         <tr>
                             <td class="px-6 py-4 font-medium">{{ $task->title }}</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded-full">
+                                    ✔ Done
+                                </span>
+                            </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 {{ $task->updated_at->format('M d, Y') }}
                             </td>
@@ -57,7 +63,7 @@
                     <p class="text-gray-500 mb-4">No completed tasks yet.</p>
                     <a href="{{ route('tasks.index') }}"
                         class="inline-block px-4 py-2 bg-blue-600 text-black rounded hover:bg-blue-700 transition">
-                        View Pending Tasks
+                        View All Tasks
                     </a>
                 </div>
                 @endif

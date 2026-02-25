@@ -47,13 +47,12 @@
                                 @if($task->is_done)
                                 <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Completed</span>
                                 @else
-                                <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">Pending</span>
+                                <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">In Progress</span>
                                 <!-- Mark as done button -->
                                 <form action="{{ route('tasks.done', $task->id) }}" method="POST" class="inline ml-2">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit"
-                                        class="text-sm text-blue-600 hover:text-blue-800">
+                                    <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">
                                         Mark as done
                                     </button>
                                 </form>
