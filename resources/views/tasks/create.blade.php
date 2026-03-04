@@ -1,548 +1,479 @@
+
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Create Task') }}
-        </h2>
-    </x-slot>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <style>
-        body {
-            font-family: 'DM Sans', sans-serif;
-        }
+    <div class="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
 
-        #calModal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, .55);
-            backdrop-filter: blur(4px);
-            z-index: 999;
-            align-items: center;
-            justify-content: center;
-        }
+        {{-- Debug / Error Box --}}
+        <div id="debugBox" class="hidden mb-6 p-4 bg-red-50 border border-red-300 text-red-700 rounded-xl text-sm font-medium"></div>
 
-        #calModal.open {
-            display: flex;
-        }
-
-        #calCard {
-            position: relative;
-            background: #fff;
-            border-radius: 24px;
-            padding: 24px 24px 20px;
-            width: 360px;
-            box-shadow: 0 32px 80px rgba(0, 0, 0, .22);
-            animation: popIn .22s cubic-bezier(.34, 1.56, .64, 1) both;
-        }
-
-        @keyframes popIn {
-            from {
-                transform: scale(.88);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        #closeModal {
-            position: absolute;
-            top: 16px;
-            right: 18px;
-            background: none;
-            border: none;
-            font-size: 22px;
-            line-height: 1;
-            color: #94a3b8;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 6px;
-            transition: color .15s;
-        }
-
-        #closeModal:hover {
-            color: #475569;
-        }
-
-        .cal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .cal-nav {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            border: 1.5px solid #e2e8f0;
-            background: #f8fafc;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background .15s, border-color .15s;
-            color: #475569;
-        }
-
-        .cal-nav:hover {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-            color: #2563eb;
-        }
-
-        .cal-month-year {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1e293b;
-        }
-
-        .cal-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-        }
-
-        .cal-dow {
-            text-align: center;
-            font-size: 11px;
-            font-weight: 600;
-            color: #94a3b8;
-            padding: 4px 0 10px;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-        }
-
-        .cal-day {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-size: 13.5px;
-            font-weight: 500;
-            cursor: pointer;
-            color: #334155;
-            transition: background .12s, color .12s;
-        }
-
-        .cal-day:not(.empty):hover {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .cal-day.selected {
-            background: #2563eb;
-            color: #fff;
-            font-weight: 700;
-        }
-
-        .cal-day.today {
-            border: 1.5px solid #2563eb;
-            color: #2563eb;
-        }
-
-        .cal-day.today.selected {
-            color: #fff;
-        }
-
-        .cal-day.empty {
-            cursor: default;
-        }
-
-        /* ── HOUR SECTION ── */
-        .hour-section {
-            margin-top: 16px;
-            padding-top: 14px;
-            border-top: 1.5px solid #f1f5f9;
-        }
-
-        .hour-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            margin-bottom: 10px;
-        }
-
-        .hour-input-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #hourInput {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-            color: #1e293b;
-            background: #f8fafc;
-            outline: none;
-            transition: border-color .15s, background .15s;
-        }
-
-        #hourInput:focus {
-            border-color: #2563eb;
-            background: #fff;
-        }
-
-        #hourInput.error {
-            border-color: #f87171;
-            background: #fff5f5;
-        }
-
-        /* ── AM/PM BADGE ── */
-        #ampmBadge {
-            min-width: 52px;
-            padding: 9px 14px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            text-align: center;
-            letter-spacing: .04em;
-            border: 1.5px solid #e2e8f0;
-            background: #f1f5f9;
-            color: #94a3b8;
-            transition: background .2s, color .2s, border-color .2s;
-            user-select: none;
-        }
-
-        #ampmBadge.am {
-            background: #eff6ff;
-            color: #2563eb;
-            border-color: #bfdbfe;
-        }
-
-        #ampmBadge.pm {
-            background: #fef3c7;
-            color: #d97706;
-            border-color: #fde68a;
-        }
-
-        .hour-hint {
-            font-size: 12px;
-            color: #94a3b8;
-            margin-top: 6px;
-        }
-
-        #hourError {
-            font-size: 12px;
-            color: #ef4444;
-            margin-top: 5px;
-            display: none;
-        }
-
-        #confirmBtn {
-            width: 100%;
-            margin-top: 16px;
-            padding: 12px;
-            background: #2563eb;
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-family: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .15s, transform .1s;
-        }
-
-        #confirmBtn:hover {
-            background: #1d4ed8;
-        }
-
-        #confirmBtn:active {
-            transform: scale(.97);
-        }
-
-        #confirmBtn:disabled {
-            background: #93c5fd;
-            cursor: not-allowed;
-        }
-
-        #openCal {
-            padding: 8px 10px;
-            background: #eff6ff;
-            border: 1.5px solid #bfdbfe;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background .15s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #openCal:hover {
-            background: #dbeafe;
-        }
-
-        #dateDisplay {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 14px;
-            color: #94a3b8;
-            background: #f8fafc;
-        }
-
-        #dateDisplay.has-value {
-            color: #1e293b;
-            font-weight: 600;
-            border-color: #bfdbfe;
-            background: #eff6ff;
-        }
-    </style>
-
-    <div class="py-12">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow-sm rounded-lg border p-6">
-
-                {{-- STEP 1 --}}
-                <div id="step1">
-                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Pick Date &amp; Time</h1>
-                    <label class="block text-gray-700 mb-3 font-medium">Select Date and Time *</label>
-
-                    <div class="flex items-center gap-3 mb-2">
-                        <div id="dateDisplay">No date selected</div>
-                        <button type="button" id="openCal" title="Open calendar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                <line x1="16" y1="2" x2="16" y2="6" />
-                                <line x1="8" y1="2" x2="8" y2="6" />
-                                <line x1="3" y1="10" x2="21" y2="10" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <p id="alert" class="text-red-500 text-sm mt-2 mb-2 hidden">Please select a date &amp; time to continue.</p>
-
-                    <button id="proceedBtn"
-                        class="mt-5 px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
-                        Continue to Create Task
-                    </button>
-                </div>
-
-                {{-- STEP 2 --}}
-                <div id="taskForm" class="hidden">
-                    <h1 class="text-2xl font-bold text-gray-800 mb-1">Create New Task</h1>
-                    <p id="chosenDateLabel" class="text-sm text-blue-600 font-medium mb-6"></p>
-
-                    <form action="{{ route('tasks.store') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="scheduled_at" id="scheduled_at">
-
-                        <div class="mb-4">
-                            <label class="block text-gray-700 mb-2 font-medium" for="title">Title *</label>
-                            <input type="text" name="title" id="title"
-                                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required>
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="block text-gray-700 mb-2 font-medium" for="description">Description (Optional)</label>
-                            <textarea name="description" id="description" rows="4"
-                                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                        </div>
-
-                        <div class="flex items-center justify-between">
-                            <a href="{{ route('tasks.index') }}"
-                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-                                Cancel
-                            </a>
-                            <button type="submit"
-                                class="px-5 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
-                                Create Task
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
+        {{-- Header --}}
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">📋 Task Calendar</h1>
+                <p class="text-sm text-gray-500 mt-1">Click any date to schedule a task — syncs with My Tasks</p>
             </div>
-        </div>
-    </div>
-
-    {{-- MODAL --}}
-    <div id="calModal" role="dialog" aria-modal="true" aria-label="Pick date and time">
-        <div id="calCard">
-            <button type="button" id="closeModal" aria-label="Close">&times;</button>
-
-            <div class="cal-header">
-                <button type="button" class="cal-nav" id="prevMonth">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <div class="flex items-center gap-3">
+                <button id="prevBtn"
+                    class="w-10 h-10 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-500 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-150">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="15 18 9 12 15 6" />
                     </svg>
                 </button>
-                <span class="cal-month-year" id="calTitle"></span>
-                <button type="button" class="cal-nav" id="nextMonth">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <span id="monthLabel" class="text-lg font-bold text-gray-800 min-w-[160px] text-center"></span>
+                <button id="nextBtn"
+                    class="w-10 h-10 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-500 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-150">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="9 18 15 12 9 6" />
                     </svg>
                 </button>
             </div>
+        </div>
 
-            <div class="cal-grid" id="calGrid">
-                <div class="cal-dow">Su</div>
-                <div class="cal-dow">Mo</div>
-                <div class="cal-dow">Tu</div>
-                <div class="cal-dow">We</div>
-                <div class="cal-dow">Th</div>
-                <div class="cal-dow">Fr</div>
-                <div class="cal-dow">Sa</div>
+        {{-- Calendar Grid --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {{-- Day of week header --}}
+            <div class="grid grid-cols-7 border-b border-gray-100">
+                @foreach(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as $dow)
+                <div class="py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-widest">{{ $dow }}</div>
+                @endforeach
             </div>
+            {{-- Days --}}
+            <div class="grid grid-cols-7" id="daysGrid"></div>
+        </div>
 
-            {{-- HOUR INPUT --}}
-            <div class="hour-section">
-                <div class="hour-label">Hour</div>
-                <div class="hour-input-wrap">
-                    <input type="text" id="hourInput" placeholder="e.g. 08:30 or 14:00" maxlength="5" autocomplete="off">
-                    <div id="ampmBadge">--</div>
-                </div>
-                <div class="hour-hint">Format: HH:MM &nbsp;·&nbsp; 24-hour (00:00 – 23:59)</div>
-                <div id="hourError">Invalid time. Please use HH:MM format (e.g. 09:00 or 21:30).</div>
-            </div>
-
-            <button type="button" id="confirmBtn" disabled>Set Date &amp; Time</button>
+        {{-- Legend --}}
+        <div class="flex items-center gap-6 mt-4 text-xs text-gray-400">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-indigo-100 border-l-2 border-indigo-500 inline-block"></span> Pending</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-100 border-l-2 border-emerald-500 inline-block"></span> Completed</span>
         </div>
     </div>
 
+    {{-- ── CREATE TASK MODAL ── --}}
+    <div id="createOverlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div id="createModal" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 relative animate-modal">
+            <button id="closeCreate" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">&times;</button>
+
+            {{-- Date badge --}}
+            <div class="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-xl px-3 py-1.5 text-sm font-semibold mb-5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <span id="modalDateLabel"></span>
+            </div>
+
+            <h2 class="text-2xl font-extrabold text-gray-900 mb-1">New Task</h2>
+            <p class="text-sm text-gray-400 mb-6">Saves to My Tasks automatically</p>
+
+            <div class="mb-4">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Title *</label>
+                <input id="taskTitle" type="text" placeholder="What needs to be done?"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Description <span class="normal-case font-normal">(optional)</span></label>
+                <textarea id="taskDesc" rows="3" placeholder="Add some details…"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none"></textarea>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Time (HH:MM)</label>
+                <div class="flex items-center gap-3">
+                    <input id="timeInput" type="text" placeholder="e.g. 09:30" maxlength="5" autocomplete="off"
+                        class="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                    <span id="ampmBadge" class="px-4 py-3 rounded-xl text-sm font-bold bg-gray-50 border border-gray-200 text-gray-400 whitespace-nowrap transition-all">--</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1.5">24-hour format · 00:00 – 23:59</p>
+                <p id="timeError" class="hidden text-xs text-red-500 mt-1">Invalid time. Use HH:MM format.</p>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="cancelCreate"
+                    class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-500 text-sm font-medium hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+                <button id="saveTask" disabled
+                    class="flex-[2] py-3 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                    ✦ Create Task
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── TASK DETAIL MODAL ── --}}
+    <div id="detailOverlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7 relative animate-modal">
+            <button id="closeDetail" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">&times;</button>
+
+            <span id="detailTag" class="inline-block rounded-lg px-3 py-1 text-xs font-semibold mb-4"></span>
+            <h2 id="detailTitle" class="text-xl font-extrabold text-gray-900 mb-2"></h2>
+            <p id="detailDesc" class="text-sm text-gray-500 leading-relaxed mb-4"></p>
+            <div id="detailMeta" class="flex items-center gap-2 text-xs text-gray-400 flex-wrap"></div>
+
+            <div class="flex gap-3 mt-6">
+                <button id="markDoneBtn"
+                    class="flex-1 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition">
+                    ✔ Mark Done
+                </button>
+                <button id="deleteTask"
+                    class="flex-1 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-100 transition">
+                    🗑 Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── TOAST ── --}}
+    <div id="toast" class="fixed bottom-7 left-1/2 -translate-x-1/2 translate-y-16 opacity-0 pointer-events-none z-[9999] px-5 py-3 rounded-2xl text-sm font-semibold shadow-xl transition-all duration-300 bg-emerald-500 text-white"></div>
+
+    <style>
+        @keyframes modalIn {
+            from {
+                transform: translateY(20px) scale(.97);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .animate-modal {
+            animation: modalIn .22s cubic-bezier(.34, 1.56, .64, 1) both;
+        }
+
+        /* Day cell add hint */
+        .day-cell .add-hint {
+            display: none;
+        }
+
+        .day-cell:hover .add-hint {
+            display: flex;
+        }
+    </style>
+
     <script>
-        const today = new Date();
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        let today = new Date();
         let viewYear = today.getFullYear();
         let viewMonth = today.getMonth();
-        let selDay = null;
-        let selHour = null;
-        let pickedMonth = null;
-        let pickedYearVal = null;
-        let pickedDatetime = null;
+        let tasks = [];
+        let selectedDate = null,
+            selectedTime = null,
+            viewingTask = null;
 
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-        ];
+        const $ = id => document.getElementById(id);
+        const daysGrid = $('daysGrid');
+        const monthLabel = $('monthLabel');
+        const createOverlay = $('createOverlay');
+        const detailOverlay = $('detailOverlay');
+        const taskTitle = $('taskTitle');
+        const taskDesc = $('taskDesc');
+        const timeInput = $('timeInput');
+        const timeError = $('timeError');
+        const ampmBadge = $('ampmBadge');
+        const saveTask = $('saveTask');
+        const toast = $('toast');
+        const debugBox = $('debugBox');
 
-        const calModal = document.getElementById('calModal');
-        const calTitle = document.getElementById('calTitle');
-        const calGrid = document.getElementById('calGrid');
-        const confirmBtn = document.getElementById('confirmBtn');
-        const dateDisplay = document.getElementById('dateDisplay');
-        const proceedBtn = document.getElementById('proceedBtn');
-        const alertMsg = document.getElementById('alert');
-        const taskForm = document.getElementById('taskForm');
-        const step1 = document.getElementById('step1');
-        const scheduledAt = document.getElementById('scheduled_at');
-        const chosenLabel = document.getElementById('chosenDateLabel');
-        const hourInput = document.getElementById('hourInput');
-        const hourError = document.getElementById('hourError');
-        const ampmBadge = document.getElementById('ampmBadge');
+        // ── helpers
+        function showDebug(msg) {
+            debugBox.classList.remove('hidden');
+            debugBox.textContent = '⚠ ' + msg;
+        }
 
-        /* ── UPDATE AM/PM BADGE ── */
-        function updateAmPm(val) {
-            const match = val.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
-            if (match) {
-                const h = parseInt(match[1], 10);
-                if (h < 12) {
-                    ampmBadge.textContent = 'AM';
-                    ampmBadge.className = 'am';
-                } else {
-                    ampmBadge.textContent = 'PM';
-                    ampmBadge.className = 'pm';
-                }
-            } else {
-                ampmBadge.textContent = '--';
-                ampmBadge.className = '';
+        function hideDebug() {
+            debugBox.classList.add('hidden');
+        }
+
+        async function apiFetch(url, options = {}) {
+            const res = await fetch(url, {
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                ...options
+            });
+            if (!res.ok) {
+                const t = await res.text();
+                throw new Error(`HTTP ${res.status}: ${t.substring(0,300)}`);
+            }
+            return res.json();
+        }
+
+        async function loadTasks() {
+            try {
+                tasks = await apiFetch('/calendar-api/tasks');
+                hideDebug();
+                renderCalendar();
+            } catch (e) {
+                showDebug('Failed to load tasks: ' + e.message);
+                renderCalendar();
             }
         }
 
-        /* ── HOUR INPUT VALIDATION ── */
-        hourInput.addEventListener('input', () => {
-            let val = hourInput.value.replace(/[^0-9:]/g, '');
-            if (val.length === 2 && !val.includes(':')) val = val + ':';
-            hourInput.value = val;
+        function pad(n) {
+            return String(n).padStart(2, '0');
+        }
 
-            hourInput.classList.remove('error');
-            hourError.style.display = 'none';
+        function dateKey(y, m, d) {
+            return `${y}-${pad(m+1)}-${pad(d)}`;
+        }
 
-            const valid = /^([01]\d|2[0-3]):([0-5]\d)$/.test(val);
-            selHour = valid ? val : null;
-            updateAmPm(val);
-            updateConfirm();
-        });
+        function dispDate(y, m, d) {
+            return `${MONTHS[m]} ${d}, ${y}`;
+        }
 
-        hourInput.addEventListener('blur', () => {
-            const val = hourInput.value.trim();
-            if (val && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(val)) {
-                hourInput.classList.add('error');
-                hourError.style.display = 'block';
-                selHour = null;
-                ampmBadge.textContent = '--';
-                ampmBadge.className = '';
-                updateConfirm();
-            }
-        });
+        function time12(t) {
+            if (!t) return '';
+            const [hh, mm] = t.split(':').map(Number);
+            return `${hh===0?12:hh>12?hh-12:hh}:${pad(mm)} ${hh<12?'AM':'PM'}`;
+        }
 
-        /* ── RENDER CALENDAR ── */
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function taskTime(t) {
+            return t.scheduled_at ? t.scheduled_at.slice(11, 16) : '';
+        }
+
+        function showToast(msg, isErr = false) {
+            toast.textContent = msg;
+            toast.className = `fixed bottom-7 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-2xl text-sm font-semibold shadow-xl transition-all duration-300 pointer-events-none ${isErr?'bg-red-500':'bg-emerald-500'} text-white translate-y-0 opacity-100`;
+            setTimeout(() => toast.className = toast.className.replace('translate-y-0 opacity-100', 'translate-y-16 opacity-0'), 2600);
+        }
+
+        // ── Render
         function renderCalendar() {
-            calTitle.textContent = `${monthNames[viewMonth]} ${viewYear}`;
-            calGrid.querySelectorAll('.cal-day').forEach(el => el.remove());
+            monthLabel.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+            daysGrid.innerHTML = '';
+            const first = new Date(viewYear, viewMonth, 1).getDay();
+            const total = new Date(viewYear, viewMonth + 1, 0).getDate();
 
-            const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-            const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
-            for (let i = 0; i < firstDay; i++) {
-                const empty = document.createElement('div');
-                empty.className = 'cal-day empty';
-                calGrid.appendChild(empty);
+            // Empty leading cells
+            for (let i = 0; i < first; i++) {
+                const el = document.createElement('div');
+                el.className = 'min-h-[110px] border-r border-b border-gray-100 bg-gray-50/60 last:border-r-0';
+                daysGrid.appendChild(el);
             }
 
-            for (let d = 1; d <= daysInMonth; d++) {
+            for (let d = 1; d <= total; d++) {
+                const isToday = d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
                 const cell = document.createElement('div');
-                cell.className = 'cal-day';
-                cell.textContent = d;
+                cell.className = `day-cell min-h-[110px] p-2.5 border-r border-b border-gray-100 last:border-r-0 cursor-pointer hover:bg-indigo-50/60 transition-colors relative overflow-hidden group`;
 
-                if (d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear())
-                    cell.classList.add('today');
-                if (d === selDay && viewMonth === pickedMonth && viewYear === pickedYearVal)
-                    cell.classList.add('selected');
+                // Day number
+                const numEl = document.createElement('div');
+                numEl.className = `inline-flex items-center justify-center w-7 h-7 rounded-full text-[13px] font-medium mb-1.5 ${isToday ? 'bg-indigo-600 text-white font-bold' : 'text-gray-400 group-hover:text-gray-700'}`;
+                numEl.textContent = d;
+                cell.appendChild(numEl);
 
-                cell.addEventListener('click', () => {
-                    calGrid.querySelectorAll('.cal-day.selected').forEach(c => c.classList.remove('selected'));
-                    cell.classList.add('selected');
-                    selDay = d;
-                    pickedMonth = viewMonth;
-                    pickedYearVal = viewYear;
-                    updateConfirm();
+                // Tasks
+                const key = dateKey(viewYear, viewMonth, d);
+                const dayTasks = tasks.filter(t => t.scheduled_at && t.scheduled_at.slice(0, 10) === key);
+                dayTasks.slice(0, 2).forEach(task => {
+                    const pill = document.createElement('div');
+                    pill.className = `flex items-center gap-1 rounded-md px-1.5 py-1 mb-0.5 text-[11px] font-medium cursor-pointer truncate border-l-2 ${task.is_done ? 'bg-emerald-50 border-emerald-400 text-emerald-700' : 'bg-indigo-50 border-indigo-400 text-indigo-700'} hover:opacity-80 transition`;
+                    pill.innerHTML = `<span class="shrink-0 text-[10px] opacity-60">${esc(time12(taskTime(task)))}</span><span class="truncate">${esc(task.title)}</span>`;
+                    pill.addEventListener('click', e => {
+                        e.stopPropagation();
+                        openDetail(task);
+                    });
+                    cell.appendChild(pill);
                 });
+                if (dayTasks.length > 2) {
+                    const more = document.createElement('div');
+                    more.className = 'text-[10px] text-gray-400 mt-0.5 pl-0.5';
+                    more.textContent = `+${dayTasks.length-2} more`;
+                    cell.appendChild(more);
+                }
 
-                calGrid.appendChild(cell);
+                // Add hint
+                const hint = document.createElement('div');
+                hint.className = 'add-hint absolute bottom-2 right-2 w-5 h-5 rounded-md bg-indigo-100 text-indigo-500 items-center justify-center text-base font-light';
+                hint.textContent = '+';
+                cell.appendChild(hint);
+
+                cell.addEventListener('click', () => openCreate(d));
+                daysGrid.appendChild(cell);
             }
         }
 
-        function updateConfirm() {
-            confirmBtn.disabled = !(selDay && selHour);
+        // ── Create modal
+        function openCreate(day) {
+            selectedDate = {
+                y: viewYear,
+                m: viewMonth,
+                d: day
+            };
+            selectedTime = null;
+            taskTitle.value = '';
+            taskDesc.value = '';
+            timeInput.value = '';
+            timeError.classList.add('hidden');
+            ampmBadge.textContent = '--';
+            ampmBadge.className = 'px-4 py-3 rounded-xl text-sm font-bold bg-gray-50 border border-gray-200 text-gray-400 whitespace-nowrap transition-all';
+            saveTask.disabled = true;
+            $('modalDateLabel').textContent = dispDate(viewYear, viewMonth, day);
+            createOverlay.classList.remove('hidden');
+            setTimeout(() => taskTitle.focus(), 100);
         }
 
-        document.getElementById('prevMonth').addEventListener('click', () => {
+        function closeCreate() {
+            createOverlay.classList.add('hidden');
+            selectedDate = null;
+        }
+
+        // ── Detail modal
+        function openDetail(task) {
+            viewingTask = task;
+            const isDone = task.is_done;
+            $('detailTag').textContent = isDone ? '✓ Completed' : '⏳ In Progress';
+            $('detailTag').className = `inline-block rounded-lg px-3 py-1 text-xs font-semibold mb-4 ${isDone ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-indigo-100 text-indigo-700 border border-indigo-200'}`;
+            $('detailTitle').textContent = task.title;
+            $('detailDesc').textContent = task.description || 'No description provided.';
+            const t12 = time12(taskTime(task));
+            const ds = task.scheduled_at ? task.scheduled_at.slice(0, 10) : '';
+            $('detailMeta').innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${esc(ds)} ${t12 ? `<span class="mx-1">·</span> 🕐 ${esc(t12)}` : ''}`;
+            $('markDoneBtn').classList.toggle('hidden', isDone);
+            detailOverlay.classList.remove('hidden');
+        }
+
+        function closeDetail() {
+            detailOverlay.classList.add('hidden');
+            viewingTask = null;
+        }
+
+        // ── Time input
+        timeInput.addEventListener('input', () => {
+            let v = timeInput.value.replace(/[^0-9:]/g, '');
+            if (v.length === 2 && !v.includes(':')) v += ':';
+            timeInput.value = v;
+            timeError.classList.add('hidden');
+            const ok = /^([01]\d|2[0-3]):([0-5]\d)$/.test(v);
+            if (ok) {
+                const h = parseInt(v, 10);
+                selectedTime = v;
+                const isAM = h < 12;
+                ampmBadge.textContent = isAM ? 'AM' : 'PM';
+                ampmBadge.className = `px-4 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${isAM?'bg-indigo-50 border-indigo-200 text-indigo-600':'bg-amber-50 border-amber-200 text-amber-600'}`;
+            } else {
+                selectedTime = null;
+                ampmBadge.textContent = '--';
+                ampmBadge.className = 'px-4 py-3 rounded-xl text-sm font-bold bg-gray-50 border border-gray-200 text-gray-400 whitespace-nowrap transition-all';
+            }
+            updateSaveBtn();
+        });
+        timeInput.addEventListener('blur', () => {
+            const v = timeInput.value.trim();
+            if (v && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(v)) timeError.classList.remove('hidden');
+        });
+        taskTitle.addEventListener('input', updateSaveBtn);
+
+        function updateSaveBtn() {
+            saveTask.disabled = !(taskTitle.value.trim() && selectedTime);
+        }
+
+        // ── Save
+        saveTask.addEventListener('click', async () => {
+            if (!selectedDate || !selectedTime || !taskTitle.value.trim()) return;
+            const {
+                y,
+                m,
+                d
+            } = selectedDate;
+            const scheduledAt = `${y}-${pad(m+1)}-${pad(d)} ${selectedTime}:00`;
+            saveTask.disabled = true;
+            saveTask.textContent = 'Saving…';
+            try {
+                const newTask = await apiFetch('/calendar-api/tasks', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title: taskTitle.value.trim(),
+                        description: taskDesc.value.trim(),
+                        scheduled_at: scheduledAt
+                    })
+                });
+                tasks.push(newTask);
+                closeCreate();
+                renderCalendar();
+                showToast('✓ Task added! Visible in My Tasks.');
+            } catch (e) {
+                showToast(e.message, true);
+                showDebug(e.message);
+            } finally {
+                saveTask.disabled = false;
+                saveTask.textContent = '✦ Create Task';
+            }
+        });
+
+        // ── Mark done
+        $('markDoneBtn').addEventListener('click', async () => {
+            if (!viewingTask) return;
+            try {
+                await apiFetch(`/tasks/${viewingTask.id}/done`, {
+                    method: 'PATCH'
+                });
+                viewingTask.is_done = true;
+                const idx = tasks.findIndex(t => t.id === viewingTask.id);
+                if (idx !== -1) tasks[idx].is_done = true;
+                closeDetail();
+                renderCalendar();
+                showToast('✔ Marked as done!');
+            } catch (e) {
+                showToast(e.message, true);
+            }
+        });
+
+        // ── Delete
+        $('deleteTask').addEventListener('click', async () => {
+            if (!viewingTask) return;
+            try {
+                await apiFetch(`/calendar-api/tasks/${viewingTask.id}`, {
+                    method: 'DELETE'
+                });
+                tasks = tasks.filter(t => t.id !== viewingTask.id);
+                closeDetail();
+                renderCalendar();
+                showToast('🗑 Task deleted');
+            } catch (e) {
+                showToast(e.message, true);
+            }
+        });
+
+        // ── Modal controls
+        $('closeCreate').addEventListener('click', closeCreate);
+        $('cancelCreate').addEventListener('click', closeCreate);
+        $('closeDetail').addEventListener('click', closeDetail);
+        createOverlay.addEventListener('click', e => {
+            if (e.target === createOverlay) closeCreate();
+        });
+        detailOverlay.addEventListener('click', e => {
+            if (e.target === detailOverlay) closeDetail();
+        });
+
+        $('prevBtn').addEventListener('click', () => {
             if (--viewMonth < 0) {
                 viewMonth = 11;
                 viewYear--;
             }
             renderCalendar();
         });
-        document.getElementById('nextMonth').addEventListener('click', () => {
+        $('nextBtn').addEventListener('click', () => {
             if (++viewMonth > 11) {
                 viewMonth = 0;
                 viewYear++;
@@ -550,46 +481,6 @@
             renderCalendar();
         });
 
-        document.getElementById('openCal').addEventListener('click', () => {
-            renderCalendar();
-            calModal.classList.add('open');
-        });
-        document.getElementById('closeModal').addEventListener('click', () => calModal.classList.remove('open'));
-        calModal.addEventListener('click', e => {
-            if (e.target === calModal) calModal.classList.remove('open');
-        });
-
-        confirmBtn.addEventListener('click', () => {
-            if (!selDay || !selHour || pickedMonth === null) return;
-            const mm = String(pickedMonth + 1).padStart(2, '0');
-            const dd = String(selDay).padStart(2, '0');
-            pickedDatetime = `${pickedYearVal}-${mm}-${dd}T${selHour}`;
-
-            const [hh, min] = selHour.split(':').map(Number);
-            const suffix = hh < 12 ? 'AM' : 'PM';
-            const hr12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
-            const label = `${monthNames[pickedMonth]} ${selDay}, ${pickedYearVal} · ${hr12}:${String(min).padStart(2,'0')} ${suffix}`;
-
-            dateDisplay.textContent = label;
-            dateDisplay.classList.add('has-value');
-            calModal.classList.remove('open');
-        });
-
-        proceedBtn.addEventListener('click', () => {
-            if (!pickedDatetime) {
-                alertMsg.classList.remove('hidden');
-                return;
-            }
-            alertMsg.classList.add('hidden');
-            scheduledAt.value = pickedDatetime;
-            chosenLabel.textContent = '📅 ' + dateDisplay.textContent;
-            step1.classList.add('hidden');
-            taskForm.classList.remove('hidden');
-            taskForm.scrollIntoView({
-                behavior: 'smooth'
-            });
-        });
-
-        renderCalendar();
+        loadTasks();
     </script>
 </x-app-layout>
